@@ -154,8 +154,9 @@
     overflow: hidden;
   }
   .card-red   { height: 5px; background: #C1272D; flex-shrink: 0; }
-  .card-name  { flex: 1; font-weight: 800; color: #1A1A1A; padding: 4px 8px 0; display: flex; align-items: flex-end; line-height: 1.05; font-size: 18px; word-break: break-word; }
-  .card-type  { font-size: 9px; font-weight: 700; color: #C1272D; letter-spacing: 0.1em; padding: 2px 8px 4px; flex-shrink: 0; }
+  .card-name  { flex: 1; font-weight: 800; color: #1A1A1A; padding: 2px 8px 4px; display: flex; align-items: center; line-height: 1.05; font-size: 21px; }
+  .card-type  { font-size: 8px; font-weight: 700; color: #C1272D; letter-spacing: 0.12em; text-align: center; padding: 3px 8px 0; flex-shrink: 0; }
+  .card-type-bottom { text-align: left; padding: 0 8px 3px; }
   .card-price { background: #1A1A1A; color: #F5C518; font-size: 18px; font-weight: 800; padding: 4px 10px; text-align: right; flex-shrink: 0; }
 
   /* ── Print ── */
@@ -189,6 +190,7 @@
     </div>
     <div style="display:flex;gap:10px;align-items:center;">
       <button class="btn-sm" onclick="if(confirm('Reset all labels to defaults?')){localStorage.removeItem(\'rudys_warmer_labels\');location.reload();}">Reset</button>
+      <button class="btn-sm" id="layout-toggle-btn" onclick="toggleLayout()" style="padding:9px 16px;">Layout: Eyebrow</button>
       <button class="print-btn" onclick="window.print()">🖨 Print Labels</button>
     </div>
   </div>
@@ -200,7 +202,7 @@
 
 <script>
 const DEFAULT_CATEGORY = "BREAKFAST TACO";
-const CAT_OPTIONS = ["", "BREAKFAST TACO", "SANDWICH", "WRAP", "PIGS N BLANKET", "__custom__"];
+const CAT_OPTIONS = ["", "BREAKFAST TACO", "SANDWICH", "WRAP", "SAUSAGE WRAP", "PIGS N BLANKET", "__custom__"];
 
 let shelves = [
   {
@@ -225,9 +227,9 @@ let shelves = [
     name: "Wrap Warmer — Top Shelf",
     items: [
       { name: "CHOPPED BEEF",                price: "$8.99", cat: "SANDWICH" },
-      { name: "SAUSAGE",                     price: "$4.49", cat: "WRAP" },
-      { name: "JALAPEÑO SAUSAGE",            price: "$4.49", cat: "WRAP" },
-      { name: "JALAPEÑO CHEDDAR SAUSAGE",    price: "$4.49", cat: "WRAP" },
+      { name: "SAUSAGE",                     price: "$4.49", cat: "SAUSAGE WRAP" },
+      { name: "JALAPEÑO SAUSAGE",            price: "$4.49", cat: "SAUSAGE WRAP" },
+      { name: "JALAPEÑO CHEDDAR SAUSAGE",    price: "$4.49", cat: "SAUSAGE WRAP" },
     ]
   },
   {
@@ -241,16 +243,41 @@ let shelves = [
 
 
 
+function nameFontSize(name) {
+  const l = (name || '').length;
+  if (l <= 10) return '21px';
+  if (l <= 15) return '19px';
+  if (l <= 20) return '17px';
+  return '14px';
+}
+
 function makeCard(item) {
   const card = document.createElement('div');
   card.className = 'card';
-  card.innerHTML = `
-    <div class="card-red"></div>
-    <div class="card-name">${item.name || ''}</div>
-    <div class="card-type">${item.cat || ''}</div>
-    <div class="card-price">${item.price || ''}</div>
-  `;
+  const fs = nameFontSize(item.name);
+  if (layoutMode === 'eyebrow') {
+    card.innerHTML = `
+      <div class="card-red"></div>
+      <div class="card-type">${item.cat || ''}</div>
+      <div class="card-name" style="font-size:${fs}">${item.name || ''}</div>
+      <div class="card-price">${item.price || ''}</div>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="card-red"></div>
+      <div class="card-name" style="font-size:${fs}">${item.name || ''}</div>
+      <div class="card-type card-type-bottom">${item.cat || ''}</div>
+      <div class="card-price">${item.price || ''}</div>
+    `;
+  }
   return card;
+}
+
+function toggleLayout() {
+  layoutMode = layoutMode === 'eyebrow' ? 'stacked' : 'eyebrow';
+  const btn = document.getElementById('layout-toggle-btn');
+  btn.textContent = 'Layout: ' + (layoutMode === 'eyebrow' ? 'Eyebrow' : 'Stacked');
+  renderPreview();
 }
 
 function renderAll() {
@@ -402,6 +429,8 @@ function renderPreview() {
   });
 }
 
+let layoutMode = 'eyebrow'; // 'eyebrow' or 'stacked'
+
 const STORAGE_KEY = 'rudys_warmer_labels_v2';
 
 function saveToStorage() {
@@ -410,6 +439,7 @@ function saveToStorage() {
     const title   = document.querySelector('.title-edit');
     const data = {
       shelves,
+      layoutMode,
       eyebrow: eyebrow ? eyebrow.value : "Rudy's 360",
       title:   title   ? title.value   : "WARMER LABELS"
     };
@@ -426,6 +456,7 @@ function loadFromStorage() {
         shelves = data; // legacy format
       } else {
         shelves = data.shelves;
+        if (data.layoutMode) layoutMode = data.layoutMode;
         const eyebrow = document.querySelector('.eyebrow-edit');
         const title   = document.querySelector('.title-edit');
         if (eyebrow && data.eyebrow) eyebrow.value = data.eyebrow;
