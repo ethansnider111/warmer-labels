@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rudy's Warmer Labels</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1e1e1e;
+    font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+    color: #fff;
+    padding: 24px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+  }
+  .header-eyebrow { font-size: 11px; letter-spacing: 0.2em; color: #F5C518; margin-bottom: 4px; }
+  .header-title   { font-size: 26px; font-weight: 800; letter-spacing: 0.02em; }
+
+
+  .header-edit {
+    background: transparent; border: none; border-bottom: 1px solid transparent;
+    font-family: inherit; color: inherit; outline: none; display: block;
+    width: 100%;
+  }
+  .header-edit:hover, .header-edit:focus { border-bottom-color: #444; }
+  .eyebrow-edit { font-size: 11px; letter-spacing: 0.2em; color: #F5C518; margin-bottom: 4px; }
+  .title-edit   { font-size: 26px; font-weight: 800; letter-spacing: 0.02em; color: #fff; }
+  .print-btn {
+    background: #F5C518; color: #1A1A1A;
+    border: none; border-radius: 3px;
+    font-family: inherit; font-size: 13px; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 9px 20px; cursor: pointer;
+  }
+  .print-btn:hover { background: #ffd740; }
+
+  /* ── Shelf block ── */
+  .shelf-block { background: #2a2a2a; border-radius: 6px; padding: 18px; margin-bottom: 16px; }
+
+  .shelf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .shelf-name-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #555;
+    color: #F5C518;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    width: 180px;
+    padding: 2px 4px;
+    outline: none;
+  }
+  .shelf-name-input:focus { border-bottom-color: #F5C518; }
+
+  .shelf-header-btns { display: flex; gap: 8px; }
+
+  .btn-sm {
+    background: #333; color: #aaa;
+    border: 1px solid #444; border-radius: 3px;
+    font-family: inherit; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; cursor: pointer;
+  }
+  .btn-sm:hover { background: #444; color: #fff; }
+  .btn-sm.danger:hover { background: #5a1a1a; color: #ff8888; border-color: #7a2a2a; }
+
+  /* ── Inputs ── */
+  .inputs-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .input-group { display: flex; flex-direction: column; gap: 5px; min-width: 170px; flex: 1; }
+  .input-group label { font-size: 9px; color: #555; letter-spacing: 0.1em; text-transform: uppercase; }
+  .input-row { display: flex; gap: 6px; align-items: stretch; }
+  .input-name {
+    flex: 1;
+    background: #1e1e1e; border: 1px solid #444; border-radius: 3px;
+    color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 6px 9px; text-transform: uppercase; outline: none;
+  }
+  .input-price {
+    width: 68px;
+    background: #1e1e1e; border: 1px solid #444; border-radius: 3px;
+    color: #F5C518; font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 6px 9px; outline: none;
+  }
+  .input-name:focus, .input-price:focus { border-color: #F5C518; }
+  .input-cat {
+    background: #1e1e1e; border: 1px solid #444; border-radius: 3px;
+    color: #C1272D; font-family: inherit; font-size: 11px; font-weight: 700;
+    padding: 6px 9px; outline: none; letter-spacing: 0.08em; text-transform: uppercase;
+    width: 100%;
+  }
+  .input-cat:focus { border-color: #F5C518; }
+  .input-custom-cat {
+    background: #1e1e1e; border: 1px solid #F5C518; border-radius: 3px;
+    color: #C1272D; font-family: inherit; font-size: 11px; font-weight: 700;
+    padding: 6px 9px; outline: none; letter-spacing: 0.08em; text-transform: uppercase;
+    width: 100%; margin-top: 5px; display: none;
+  }
+  .input-custom-cat:focus { border-color: #F5C518; }
+  .remove-btn {
+    background: transparent; border: 1px solid #3a3a3a; border-radius: 3px;
+    color: #555; font-size: 14px; cursor: pointer; padding: 0 8px;
+    line-height: 1;
+  }
+  .remove-btn:hover { background: #3a1a1a; color: #ff6666; border-color: #5a2a2a; }
+
+  .add-shelf-btn {
+    background: transparent;
+    border: 1px dashed #444;
+    border-radius: 6px;
+    color: #666;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .add-shelf-btn:hover { border-color: #F5C518; color: #F5C518; }
+
+  /* ── Label preview ── */
+  .preview-section { margin-top: 28px; }
+  .preview-shelf { margin-bottom: 20px; }
+  .preview-shelf-label {
+    font-size: 10px; letter-spacing: 0.15em; color: #999;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .cards-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* ── Card ── */
+  .card {
+    width: 210px; height: 96px;
+    background: #F5C518;
+    border: 2.5px solid #1A1A1A;
+    border-radius: 3px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .card-red   { height: 5px; background: #C1272D; flex-shrink: 0; }
+  .card-name  { flex: 1; font-weight: 800; color: #1A1A1A; padding: 4px 8px 0; display: flex; align-items: flex-end; line-height: 1.05; font-size: 18px; word-break: break-word; }
+  .card-type  { font-size: 9px; font-weight: 700; color: #C1272D; letter-spacing: 0.1em; padding: 2px 8px 4px; flex-shrink: 0; }
+  .card-price { background: #1A1A1A; color: #F5C518; font-size: 18px; font-weight: 800; padding: 4px 10px; text-align: right; flex-shrink: 0; }
+
+  /* ── Print ── */
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body { background: #fff; padding: 0; }
+    .no-print { display: none !important; }
+    .preview-section { margin-top: 0; }
+    .preview-shelf { margin-bottom: 14px; break-inside: avoid; }
+    .preview-shelf-label { color: #999; font-size: 8pt; margin-bottom: 5px; }
+    .cards-row { gap: 4px; }
+    .card { width: 2.25in; height: 0.9in; border-width: 2px; break-inside: avoid; }
+    .card-red   { height: 6px; }
+    .card-cat   { font-size: 7pt; }
+    .card-name  { padding: 2px 8px 2px; }
+    .card-price { font-size: 13pt; padding: 2px 8px; }
+  }
+  @page { size: landscape; margin: 0.4in; }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <div class="header">
+    <div>
+      <input class="header-edit eyebrow-edit" value="Rudy&#39;s 360" maxlength="40">
+      <input class="header-edit title-edit" value="WARMER LABELS" maxlength="40">
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="btn-sm" onclick="if(confirm('Reset all labels to defaults?')){localStorage.removeItem(\'rudys_warmer_labels\');location.reload();}">Reset</button>
+      <button class="print-btn" onclick="window.print()">🖨 Print Labels</button>
+    </div>
+  </div>
+  <div id="shelves-editor"></div>
+  <button class="add-shelf-btn" onclick="addShelf()">+ Add Shelf</button>
+</div>
+
+<div class="preview-section" id="preview"></div>
+
+<script>
+const DEFAULT_CATEGORY = "BREAKFAST TACO";
+const CAT_OPTIONS = ["", "BREAKFAST TACO", "SANDWICH", "WRAP", "PIGS N BLANKET", "__custom__"];
+
+let shelves = [
+  {
+    name: "Taco Warmer — Top Shelf",
+    items: [
+      { name: "BRISKET & EGG",         price: "$2.99", cat: "BREAKFAST TACO" },
+      { name: "BRISKET, EGG & CHEESE", price: "$3.49", cat: "BREAKFAST TACO" },
+      { name: "BACON & EGG",           price: "$2.99", cat: "BREAKFAST TACO" },
+      { name: "BACON, EGG & CHEESE",   price: "$3.49", cat: "BREAKFAST TACO" },
+    ]
+  },
+  {
+    name: "Taco Warmer — Bottom Shelf",
+    items: [
+      { name: "POTATO & EGG",         price: "$2.99", cat: "BREAKFAST TACO" },
+      { name: "POTATO, EGG & CHEESE", price: "$3.49", cat: "BREAKFAST TACO" },
+      { name: "SAUSAGE & EGG",        price: "$2.99", cat: "BREAKFAST TACO" },
+      { name: "CHOPPED BEEF",         price: "$2.99", cat: "BREAKFAST TACO" },
+    ]
+  },
+  {
+    name: "Wrap Warmer — Top Shelf",
+    items: [
+      { name: "CHOPPED BEEF",                price: "$8.99", cat: "SANDWICH" },
+      { name: "SAUSAGE",                     price: "$4.49", cat: "WRAP" },
+      { name: "JALAPEÑO SAUSAGE",            price: "$4.49", cat: "WRAP" },
+      { name: "JALAPEÑO CHEDDAR SAUSAGE",    price: "$4.49", cat: "WRAP" },
+    ]
+  },
+  {
+    name: "Wrap Warmer — Bottom Shelf",
+    items: [
+      { name: "PIGS N BLANKET",   price: "$2.99", cat: "PIGS N BLANKET" },
+      { name: "WITH CHEESE",      price: "$2.99", cat: "PIGS N BLANKET" },
+    ]
+  }
+];
+
+
+
+function makeCard(item) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-red"></div>
+    <div class="card-name">${item.name || ''}</div>
+    <div class="card-type">${item.cat || ''}</div>
+    <div class="card-price">${item.price || ''}</div>
+  `;
+  return card;
+}
+
+function renderAll() {
+  // Editor
+  const editor = document.getElementById('shelves-editor');
+  editor.innerHTML = '';
+  shelves.forEach((shelf, si) => {
+    const block = document.createElement('div');
+    block.className = 'shelf-block';
+
+    const header = document.createElement('div');
+    header.className = 'shelf-header';
+
+    const nameInput = document.createElement('input');
+    nameInput.className = 'shelf-name-input';
+    nameInput.value = shelf.name;
+    nameInput.addEventListener('input', e => { shelves[si].name = e.target.value; renderPreview(); });
+
+    const btns = document.createElement('div');
+    btns.className = 'shelf-header-btns';
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn-sm';
+    addBtn.textContent = '+ Add Label';
+    addBtn.onclick = () => { shelves[si].items.push({ name: '', price: '', cat: DEFAULT_CATEGORY }); renderAll(); };
+
+    const delShelfBtn = document.createElement('button');
+    delShelfBtn.className = 'btn-sm danger';
+    delShelfBtn.textContent = 'Remove Shelf';
+    delShelfBtn.onclick = () => { if (confirm('Remove this shelf?')) { shelves.splice(si, 1); renderAll(); } };
+
+    btns.appendChild(addBtn);
+    btns.appendChild(delShelfBtn);
+    header.appendChild(nameInput);
+    header.appendChild(btns);
+    block.appendChild(header);
+
+    const inputsRow = document.createElement('div');
+    inputsRow.className = 'inputs-row';
+
+    shelf.items.forEach((item, ii) => {
+      const group = document.createElement('div');
+      group.className = 'input-group';
+
+      const label = document.createElement('label');
+      label.textContent = `Position ${ii + 1}`;
+
+      const row = document.createElement('div');
+      row.className = 'input-row';
+
+      const nameIn = document.createElement('input');
+      nameIn.className = 'input-name';
+      nameIn.type = 'text';
+      nameIn.value = item.name;
+      nameIn.placeholder = 'PRODUCT NAME';
+      nameIn.maxLength = 30;
+      nameIn.addEventListener('input', e => {
+        shelves[si].items[ii].name = e.target.value.toUpperCase();
+        renderPreview();
+      });
+
+      const priceIn = document.createElement('input');
+      priceIn.className = 'input-price';
+      priceIn.type = 'text';
+      priceIn.value = item.price;
+      priceIn.placeholder = '$0.00';
+      priceIn.maxLength = 7;
+      priceIn.addEventListener('input', e => {
+        shelves[si].items[ii].price = e.target.value;
+        renderPreview();
+      });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = '×';
+      removeBtn.title = 'Remove label';
+      removeBtn.onclick = () => { shelves[si].items.splice(ii, 1); renderAll(); };
+
+      const catSel = document.createElement('select');
+      catSel.className = 'input-cat';
+      const isCustom = item.cat && !CAT_OPTIONS.slice(0,-1).includes(item.cat);
+      CAT_OPTIONS.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt === '__custom__' ? 'Custom...' : (opt || '(no type)');
+        if ((isCustom && opt === '__custom__') || (!isCustom && opt === item.cat)) o.selected = true;
+        catSel.appendChild(o);
+      });
+
+      const customIn = document.createElement('input');
+      customIn.className = 'input-custom-cat';
+      customIn.type = 'text';
+      customIn.placeholder = 'TYPE CUSTOM LABEL';
+      customIn.maxLength = 30;
+      customIn.style.display = isCustom ? 'block' : 'none';
+      if (isCustom) customIn.value = item.cat;
+
+      catSel.addEventListener('change', e => {
+        if (e.target.value === '__custom__') {
+          customIn.style.display = 'block';
+          customIn.focus();
+          shelves[si].items[ii].cat = customIn.value.toUpperCase();
+        } else {
+          customIn.style.display = 'none';
+          shelves[si].items[ii].cat = e.target.value;
+        }
+        renderPreview();
+      });
+      customIn.addEventListener('input', e => {
+        shelves[si].items[ii].cat = e.target.value.toUpperCase();
+        renderPreview();
+      });
+
+      row.appendChild(nameIn);
+      row.appendChild(priceIn);
+      row.appendChild(removeBtn);
+      group.appendChild(label);
+      group.appendChild(row);
+      group.appendChild(catSel);
+      group.appendChild(customIn);
+      inputsRow.appendChild(group);
+    });
+
+    block.appendChild(inputsRow);
+    editor.appendChild(block);
+  });
+
+  renderPreview();
+}
+
+function renderPreview() {
+  saveToStorage();
+  const preview = document.getElementById('preview');
+  preview.innerHTML = '';
+  shelves.forEach(shelf => {
+    const section = document.createElement('div');
+    section.className = 'preview-shelf';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'preview-shelf-label';
+    lbl.textContent = '▸ ' + shelf.name.toUpperCase();
+    section.appendChild(lbl);
+
+    const row = document.createElement('div');
+    row.className = 'cards-row';
+    shelf.items.forEach(item => row.appendChild(makeCard(item)));
+    section.appendChild(row);
+    preview.appendChild(section);
+  });
+}
+
+const STORAGE_KEY = 'rudys_warmer_labels_v2';
+
+function saveToStorage() {
+  try {
+    const eyebrow = document.querySelector('.eyebrow-edit');
+    const title   = document.querySelector('.title-edit');
+    const data = {
+      shelves,
+      eyebrow: eyebrow ? eyebrow.value : "Rudy's 360",
+      title:   title   ? title.value   : "WARMER LABELS"
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (Array.isArray(data)) {
+        shelves = data; // legacy format
+      } else {
+        shelves = data.shelves;
+        const eyebrow = document.querySelector('.eyebrow-edit');
+        const title   = document.querySelector('.title-edit');
+        if (eyebrow && data.eyebrow) eyebrow.value = data.eyebrow;
+        if (title   && data.title)   title.value   = data.title;
+      }
+    }
+  } catch(e) {}
+}
+
+function addShelf() {
+  shelves.push({
+    name: "New Shelf",
+    items: [{ name: '', price: '', cat: DEFAULT_CATEGORY }]
+  });
+  renderAll();
+}
+
+
+  loadFromStorage();
+  renderAll();
+</script>
+</body>
+</html>
