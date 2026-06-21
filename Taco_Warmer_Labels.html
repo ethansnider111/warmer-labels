@@ -53,7 +53,7 @@
   }
 
   .per-label-controls {
-    max-height: 200px;
+    max-height: 600px;
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease;
     opacity: 1;
@@ -225,7 +225,8 @@
           <span class="size-label" style="color:#aaa;text-transform:uppercase;letter-spacing:0.1em;font-size:9px;">Layout:</span>
           <button id="global-layout-btn" onclick="cycleGlobalLayout()" style="background:#C1272D;color:#F5C518;border:none;border-radius:3px;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;cursor:pointer;min-width:80px;">Eyebrow</button>
         </div>
-        <div class="font-controls" id="global-theme-row">eme-row"></div>
+        <div class="font-controls" id="global-theme-row"></div>
+        <button onclick="shuffleAllLabels()" style="background:#F5C518;color:#1A1A1A;border:none;border-radius:3px;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;cursor:pointer;">⇄ Shuffle</button>
         <div class="font-controls">
           <span class="size-label" style="color:#aaa;text-transform:uppercase;letter-spacing:0.1em;font-size:9px;">Font:</span>
           <select class="font-select" id="font-select" onchange="changeFont(this.value)">
@@ -282,9 +283,16 @@
     </div>
   </div>
   <div class="no-print" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 16px;background:#F5C518;border-radius:6px;">
-    <span style="font-size:10px;color:#1A1A1A;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;font-weight:800;">🖨 Print label height</span>
-    <input id="print-height-number" type="text" value="1" oninput="updatePrintHeightFromParts()" style="background:#1A1A1A;border:none;border-radius:3px;color:#F5C518;font-family:inherit;font-size:13px;font-weight:700;padding:6px 10px;width:80px;outline:none;">
+    <span style="font-size:10px;color:#1A1A1A;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;font-weight:800;">🖨 Label size</span>
+    <span style="font-size:10px;color:#1A1A1A;font-weight:700;">H:</span>
+    <input id="print-height-number"  type="text" value="1" oninput="updatePrintHeightFromParts()" style="background:#1A1A1A;border:none;border-radius:3px;color:#F5C518;font-family:inherit;font-size:13px;font-weight:700;padding:6px 10px;width:80px;outline:none;">
     <select id="print-height-unit" onchange="updatePrintHeightFromParts()" style="background:#1A1A1A;border:none;border-radius:3px;color:#F5C518;font-family:inherit;font-size:13px;font-weight:700;padding:6px 10px;outline:none;cursor:pointer;">
+      <option value="in">in</option>
+      <option value="cm">cm</option>
+    </select>
+    <span style="font-size:10px;color:#1A1A1A;font-weight:700;margin-left:6px;">W:</span>
+    <input id="print-width-number" type="text" value="2.25" oninput="updatePrintWidthFromParts()" style="background:#1A1A1A;border:none;border-radius:3px;color:#F5C518;font-family:inherit;font-size:13px;font-weight:700;padding:6px 10px;width:70px;outline:none;">
+    <select id="print-width-unit" onchange="updatePrintWidthFromParts()" style="background:#1A1A1A;border:none;border-radius:3px;color:#F5C518;font-family:inherit;font-size:13px;font-weight:700;padding:6px 10px;outline:none;cursor:pointer;">
       <option value="in">in</option>
       <option value="cm">cm</option>
     </select>
@@ -448,25 +456,52 @@ function buildGlobalThemeSwatches() {
   });
 }
 
+let printWidthManual = false;
+
+function updatePrintWidthFromParts() {
+  printWidthManual = true;
+  applyPrintDimensions();
+}
+
 function updatePrintHeightFromParts() {
-  const num = parseFloat(document.getElementById('print-height-number').value) || 1;
-  const unit = document.getElementById('print-height-unit').value || 'in';
-  const width = (num * 2.25).toFixed(4);
-  const h = num + unit;
-  const w = width + unit;
-  const zoom = unit === 'in' ? num : (num / 2.54);
+  if (!printWidthManual) {
+    const num = parseFloat(document.getElementById('print-height-number').value) || 1;
+    const unit = document.getElementById('print-height-unit').value || 'in';
+    const autoW = (num * 2.25).toFixed(4);
+    document.getElementById('print-width-number').value = autoW;
+    document.getElementById('print-width-unit').value = unit;
+  }
+  applyPrintDimensions();
+}
+
+function applyPrintDimensions() {
+  const hNum = parseFloat(document.getElementById('print-height-number').value) || 1;
+  const hUnit = document.getElementById('print-height-unit').value || 'in';
+  const wNum = parseFloat(document.getElementById('print-width-number').value) || (hNum * 2.25);
+  const wUnit = document.getElementById('print-width-unit').value || 'in';
+  const zoom = hUnit === 'in' ? hNum : (hNum / 2.54);
   let s = document.getElementById('print-height-style');
   if (!s) { s = document.createElement('style'); s.id = 'print-height-style'; document.head.appendChild(s); }
-  s.textContent = '@media print { .card { height: ' + h + ' !important; width: ' + w + ' !important; zoom: ' + zoom.toFixed(4) + '; } }';
-  try { localStorage.setItem('rudys_print_height_num', num); localStorage.setItem('rudys_print_height_unit', unit); } catch(e) {}
+  s.textContent = '@media print { .card { height: ' + hNum + hUnit + ' !important; width: ' + wNum + wUnit + ' !important; zoom: ' + zoom.toFixed(4) + '; } }';
+  try {
+    localStorage.setItem('rudys_print_height_num', hNum);
+    localStorage.setItem('rudys_print_height_unit', hUnit);
+    localStorage.setItem('rudys_print_width_num', wNum);
+    localStorage.setItem('rudys_print_width_unit', wUnit);
+  } catch(e) {}
 }
 
 function loadPrintHeight() {
   try {
-    const num = localStorage.getItem('rudys_print_height_num') || '1';
-    const unit = localStorage.getItem('rudys_print_height_unit') || 'in';
-    document.getElementById('print-height-number').value = num;
-    document.getElementById('print-height-unit').value = unit;
+    const hNum = localStorage.getItem('rudys_print_height_num') || '1';
+    const hUnit = localStorage.getItem('rudys_print_height_unit') || 'in';
+    const wNum = localStorage.getItem('rudys_print_width_num') || (parseFloat(hNum) * 2.25).toFixed(4);
+    const wUnit = localStorage.getItem('rudys_print_width_unit') || hUnit;
+    document.getElementById('print-height-number').value = hNum;
+    document.getElementById('print-height-unit').value = hUnit;
+    document.getElementById('print-width-number').value = wNum;
+    document.getElementById('print-width-unit').value = wUnit;
+    if (localStorage.getItem('rudys_print_width_num')) printWidthManual = true;
     updatePrintHeightFromParts();
   } catch(e) {}
 }
@@ -482,8 +517,30 @@ function resetAll() {
   location.reload();
 }
 
+function shuffleAllLabels() {
+  const themes = [0, 1, 2];
+  const layouts = ['eyebrow', 'stacked', 'pricebar'];
+  const aligns = ['top-left','top-center','top-right','middle-left','middle-center','middle-right','bottom-left','bottom-center','bottom-right'];
+  const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+  shelves.forEach(shelf => shelf.items.forEach(item => {
+    item.theme = rnd(themes);
+    item.layout = rnd(layouts);
+    item.nameAlign = rnd(aligns);
+  }));
+  saveToStorage();
+  renderAll();
+}
+
+function highlightAlignBtn(val) {
+  ['top-left','top-center','top-right','middle-left','middle-center','middle-right','bottom-left','bottom-center','bottom-right'].forEach(v => {
+    const b = document.getElementById('global-align-' + v);
+    if (b) b.style.cssText = v === val ? 'background:#C1272D;color:#F5C518;border:none;border-radius:3px;font-family:inherit;font-size:12px;font-weight:800;padding:4px 6px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;' : 'background:#2a2a2a;color:#666;border:1px solid #444;border-radius:3px;font-family:inherit;font-size:12px;font-weight:800;padding:4px 6px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;';
+  });
+}
+
 function setGlobalAlign(val) {
   shelves.forEach(shelf => shelf.items.forEach(item => { item.nameAlign = val; }));
+  highlightAlignBtn(val);
   ['left','center','right'].forEach(a => {
     const b = document.getElementById('global-align-' + a[0]);
     if (b) b.style.cssText = a === val ? 'background:#C1272D;color:#F5C518;border:none;border-radius:3px;font-family:inherit;font-size:11px;font-weight:800;padding:4px 8px;cursor:pointer;' : 'background:#2a2a2a;color:#666;border:1px solid #444;border-radius:3px;font-family:inherit;font-size:11px;font-weight:800;padding:4px 8px;cursor:pointer;';
