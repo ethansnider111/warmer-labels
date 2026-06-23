@@ -227,19 +227,7 @@
         </div>
         <div class="font-controls" id="global-theme-row"></div>
         <button onclick="shuffleAllLabels()" style="background:#F5C518;color:#1A1A1A;border:none;border-radius:3px;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;cursor:pointer;">⇄ Shuffle</button>
-        <div class="font-controls">
-          <span class="size-label" style="color:#aaa;text-transform:uppercase;letter-spacing:0.1em;font-size:9px;">Font:</span>
-          <select class="font-select" id="font-select" onchange="changeFont(this.value)">
-            <option value="'Barlow Condensed', 'Arial Narrow', Arial, sans-serif">Barlow Condensed</option>
-            <option value="'Arial Narrow', Arial, sans-serif">Arial Narrow</option>
-            <option value="Impact, sans-serif">Impact</option>
-            <option value="Arial, sans-serif">Arial</option>
-            <option value="Verdana, sans-serif">Verdana</option>
-            <option value="Georgia, serif">Georgia</option>
-            <option value="'Courier New', monospace">Courier New</option>
-            <option value="'Trebuchet MS', sans-serif">Trebuchet Ms</option>
-          </select>
-        </div>
+
                 <div class="font-controls" style="align-items:flex-start;">
           <span class="size-label" style="color:#aaa;text-transform:uppercase;letter-spacing:0.1em;font-size:9px;padding-top:6px;">Align:</span>
           <div style="display:grid;grid-template-columns:repeat(3,28px);gap:3px;">
@@ -350,11 +338,17 @@ function nameFontSize(name, hasType, b) {
   return (b || fontSizeBase) + 'px';
 }
 
+function computeFontSize(name, maxSize) {
+  const len = (name || '').length;
+  if (len === 0) return maxSize;
+  return Math.min(maxSize, Math.floor(FONT_CAPACITY / len));
+}
+
 function makeCard(item) {
   const theme = THEMES[item.theme !== undefined ? item.theme % THEMES.length : 0];
   const card = document.createElement('div');
   card.className = 'card';
-  const cardLayout = globalMode ? layoutMode : (item.layout || layoutMode);
+  const cardLayout = item.layout || layoutMode;
   const hasType = !!(item.cat) && cardLayout !== 'clear';
   const baseSize = item.fontSize || fontSizeBase;
   const fs = nameFontSize(item.name, hasType, baseSize);
@@ -416,16 +410,22 @@ function toggleGlobalMode() {
 
 function applyGlobalSizes() {
   shelves.forEach(shelf => shelf.items.forEach(item => {
-    item.fontSize = globalNameSize;
+    item.maxFontSize = globalNameSize;
+    item.fontSize = computeFontSize(item.name, globalNameSize);
     item.catSize = globalCatSize;
   }));
   renderAll();
 }
 
 function adjustGlobalNameSize(delta) {
-  globalNameSize = Math.min(36, Math.max(10, globalNameSize + delta));
+  const capMax = Math.min(...shelves.flatMap(s => s.items.map(i => computeFontSize(i.name, 36))));
+  globalNameSize = Math.min(delta > 0 ? capMax : 36, Math.max(10, globalNameSize + delta));
   document.getElementById('global-name-size-label').textContent = globalNameSize + 'px';
   applyGlobalSizes();
+  // Update all name input maxLengths
+  document.querySelectorAll('.input-name').forEach(inp => {
+    inp.maxLength = Math.floor(FONT_CAPACITY / globalNameSize);
+  });
 }
 
 function adjustGlobalCatSize(delta) {
@@ -479,10 +479,16 @@ function applyPrintDimensions() {
   const hUnit = document.getElementById('print-height-unit').value || 'in';
   const wNum = parseFloat(document.getElementById('print-width-number').value) || (hNum * 2.25);
   const wUnit = document.getElementById('print-width-unit').value || 'in';
-  const zoom = hUnit === 'in' ? hNum : (hNum / 2.54);
+  // Base card is 0.9in x 2.25in. zoom scales height + text. Width is adjusted to
+  // counteract zoom so final printed width matches user's target.
+  const hInches = hUnit === 'in' ? hNum : hNum / 2.54;
+  const wInches = wUnit === 'in' ? wNum : wNum / 2.54;
+  const zoom = hInches / 0.9;
+  // After zoom, card width = 2.25 * zoom. Divide target by zoom to get pre-zoom width.
+  const adjustedW = (wInches / zoom).toFixed(4);
   let s = document.getElementById('print-height-style');
   if (!s) { s = document.createElement('style'); s.id = 'print-height-style'; document.head.appendChild(s); }
-  s.textContent = '@media print { .card { height: ' + hNum + hUnit + ' !important; width: ' + wNum + wUnit + ' !important; zoom: ' + zoom.toFixed(4) + '; } }';
+  s.textContent = '@media print { .card { zoom: ' + zoom.toFixed(4) + '; width: ' + adjustedW + 'in !important; } }';
   try {
     localStorage.setItem('rudys_print_height_num', hNum);
     localStorage.setItem('rudys_print_height_unit', hUnit);
@@ -513,6 +519,8 @@ function resetAll() {
     localStorage.removeItem('rudys_warmer_labels');
     localStorage.removeItem('rudys_print_height_num');
     localStorage.removeItem('rudys_print_height_unit');
+    localStorage.removeItem('rudys_print_width_num');
+    localStorage.removeItem('rudys_print_width_unit');
   } catch(e) {}
   location.reload();
 }
@@ -552,6 +560,7 @@ function setGlobalAlign(val) {
 function cycleGlobalLayout() {
   const order = ['eyebrow','stacked','pricebar','clear'];
   layoutMode = order[(order.indexOf(layoutMode) + 1) % order.length];
+  shelves.forEach(shelf => shelf.items.forEach(item => { item.layout = layoutMode; }));
   const labels = { eyebrow: 'Eyebrow', stacked: 'Stacked', pricebar: 'Price Bar', clear: 'Clear' };
   const btn = document.getElementById('global-layout-btn');
   if (btn) btn.textContent = labels[layoutMode];
@@ -634,7 +643,7 @@ function renderAll() {
       nameIn.type = 'text';
       nameIn.value = item.name;
       nameIn.placeholder = 'PRODUCT NAME';
-      nameIn.maxLength = 30;
+      nameIn.maxLength = Math.floor(FONT_CAPACITY / (item.maxFontSize || item.fontSize || fontSizeBase));
 
       const priceIn = document.createElement('input');
       priceIn.className = 'input-price';
@@ -713,18 +722,36 @@ function renderAll() {
       const nameSizeLabel = document.createElement('span');
       nameSizeLabel.textContent = 'Name size:';
       nameSizeLabel.style.cssText = 'font-size:9px;color:#666;letter-spacing:0.1em;text-transform:uppercase;min-width:70px;';
-      const nameSize = item.fontSize || 21;
+      const nameSize = computeFontSize(item.name, item.maxFontSize || item.fontSize || 21);
+      if (item.name) { shelves[si].items[ii].fontSize = nameSize; }
       const nameSizeDisplay = document.createElement('span');
       nameSizeDisplay.className = 'size-label';
-      nameSizeDisplay.textContent = nameSize + 'px';
+      nameSizeDisplay.textContent = (item.fontSize || nameSize) + 'px';
       const nameMinusBtn = document.createElement('button');
       nameMinusBtn.className = 'size-btn';
       nameMinusBtn.textContent = '−';
-      nameMinusBtn.onclick = () => { shelves[si].items[ii].fontSize = Math.max(10, (shelves[si].items[ii].fontSize || 21) - 1); nameSizeDisplay.textContent = shelves[si].items[ii].fontSize + 'px'; refreshItem(si, ii); };
+      nameMinusBtn.onclick = () => {
+        const cur = shelves[si].items[ii].maxFontSize || shelves[si].items[ii].fontSize || 21;
+        shelves[si].items[ii].maxFontSize = Math.max(10, cur - 1);
+        const newSz = computeFontSize(shelves[si].items[ii].name, shelves[si].items[ii].maxFontSize);
+        shelves[si].items[ii].fontSize = newSz;
+        nameSizeDisplay.textContent = newSz + 'px';
+        nameIn.maxLength = Math.floor(FONT_CAPACITY / shelves[si].items[ii].maxFontSize);
+        refreshItem(si, ii);
+      };
       const namePlusBtn = document.createElement('button');
       namePlusBtn.className = 'size-btn';
       namePlusBtn.textContent = '+';
-      namePlusBtn.onclick = () => { shelves[si].items[ii].fontSize = Math.min(36, (shelves[si].items[ii].fontSize || 21) + 1); nameSizeDisplay.textContent = shelves[si].items[ii].fontSize + 'px'; refreshItem(si, ii); };
+      namePlusBtn.onclick = () => {
+        const cur = shelves[si].items[ii].maxFontSize || shelves[si].items[ii].fontSize || 21;
+        const capMax = computeFontSize(shelves[si].items[ii].name, 36);
+        shelves[si].items[ii].maxFontSize = Math.min(capMax, cur + 1);
+        const newSz = computeFontSize(shelves[si].items[ii].name, shelves[si].items[ii].maxFontSize);
+        shelves[si].items[ii].fontSize = newSz;
+        nameSizeDisplay.textContent = newSz + 'px';
+        nameIn.maxLength = Math.floor(FONT_CAPACITY / shelves[si].items[ii].maxFontSize);
+        refreshItem(si, ii);
+      };
       nameSizeRow.appendChild(nameSizeLabel);
       nameSizeRow.appendChild(nameMinusBtn);
       nameSizeRow.appendChild(nameSizeDisplay);
@@ -766,7 +793,15 @@ function renderAll() {
         if (slot) { slot.innerHTML = ''; slot.appendChild(makeCard(shelves[si].items[ii])); }
       };
 
-      nameIn.addEventListener('input', e => { shelves[si].items[ii].name = e.target.value.toUpperCase(); refreshItem(si, ii); });
+      nameIn.addEventListener('input', e => {
+        const val = e.target.value.toUpperCase();
+        shelves[si].items[ii].name = val;
+        const maxSz = shelves[si].items[ii].maxFontSize || fontSizeBase;
+        const newSz = computeFontSize(val, maxSz);
+        shelves[si].items[ii].fontSize = newSz;
+        nameSizeDisplay.textContent = newSz + 'px';
+        refreshItem(si, ii);
+      });
       priceIn.addEventListener('input', e => { shelves[si].items[ii].price = e.target.value; refreshItem(si, ii); });
 
       row.appendChild(nameIn);
@@ -790,7 +825,7 @@ function renderAll() {
       layoutBtn.onclick = () => {
         const cur = shelves[si].items[ii].layout || layoutMode;
         shelves[si].items[ii].layout = layoutOrder[(layoutOrder.indexOf(cur) + 1) % layoutOrder.length];
-        if (shelves[si].items[ii].layout === 'clear') shelves[si].items[ii].cat = '';
+        if (shelves[si].items[ii].layout === 'clear') {}
         layoutBtn.textContent = layoutLabels[shelves[si].items[ii].layout];
         refreshItem(si, ii);
       };
@@ -826,7 +861,6 @@ function renderAll() {
       perLabel.appendChild(alignRow);
       perLabel.appendChild(layoutRow);
       perLabel.appendChild(themeRow);
-      perLabel.appendChild(fontRow);
       perLabel.appendChild(nameSizeRow);
       perLabel.appendChild(catSizeRow);
       group.appendChild(perLabel);
@@ -862,9 +896,10 @@ function renderPreview() {
   });
 }
 
+const FONT_CAPACITY = 441;
 let layoutMode = 'eyebrow';
 let globalMode = true;
-let labelFont = "'Barlow Condensed', 'Arial Narrow', Arial, sans-serif";
+const labelFont = "'Barlow Condensed', 'Arial Narrow', Arial, sans-serif";
 let fontSizeBase = 21;
 let globalNameSize = 21;
 let globalCatSize = 11;
@@ -920,11 +955,7 @@ function loadFromStorage() {
   } catch(e) {}
 }
 
-function changeFont(val) {
-  labelFont = val;
-  renderPreview();
-  refreshAllPreviews();
-}
+
 
 function changeFontSize(delta) {
   fontSizeBase = Math.min(36, Math.max(10, fontSizeBase + delta));
